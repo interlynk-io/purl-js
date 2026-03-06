@@ -34,9 +34,22 @@ export interface TypeDefinition {
 
 // Internal registry
 const registry = new Map<string, TypeDefinition>();
+const builtinTypes = new Set<string>();
+
+/** Deep-freeze an object and all nested objects. */
+function deepFreeze<T extends object>(obj: T): T {
+  Object.freeze(obj);
+  for (const val of Object.values(obj)) {
+    if (val && typeof val === 'object' && !Object.isFrozen(val)) {
+      deepFreeze(val as object);
+    }
+  }
+  return obj;
+}
 
 /**
  * Look up a registered PURL type definition.
+ * Returns a frozen object — mutations will throw in strict mode.
  */
 export function lookupType(typ: string): TypeDefinition | undefined {
   return registry.get(typ.toLowerCase());
@@ -50,10 +63,15 @@ export function registeredTypes(): string[] {
 }
 
 /**
- * Register or override a type definition.
+ * Register a custom type definition.
+ * Cannot override built-in spec types — only new types or previously user-registered types.
  */
 export function registerType(def: TypeDefinition): void {
-  registry.set(def.type.toLowerCase(), def);
+  const key = def.type.toLowerCase();
+  if (builtinTypes.has(key)) {
+    throw new Error(`cannot override built-in type "${key}"`);
+  }
+  registry.set(key, deepFreeze(structuredClone(def)));
 }
 
 // Helper to define types concisely
@@ -73,7 +91,7 @@ function defType(
     examples?: string[];
   } = {}
 ): void {
-  registry.set(type, {
+  const def: TypeDefinition = {
     type,
     typeName,
     description,
@@ -99,7 +117,9 @@ function defType(
       : undefined,
     qualifiers: opts.qualifiers,
     examples: opts.examples ?? [],
-  });
+  };
+  registry.set(type, deepFreeze(def));
+  builtinTypes.add(type);
 }
 
 // Register all 39 PURL types from the spec

@@ -8,10 +8,21 @@ export type Qualifiers = Record<string, string>;
 /** Maximum accepted PURL string length to prevent denial-of-service. */
 const MAX_PURL_LENGTH = 65536;
 
+/** Maximum length for any single component to prevent DoS via constructor. */
+const MAX_COMPONENT_LENGTH = 4096;
+
 /** Maximum number of qualifier pairs to prevent hash-flooding DoS. */
 const MAX_QUALIFIERS = 128;
 
 const QUALIFIER_KEY_RE = /^[a-z][a-z0-9._-]*$/;
+const TYPE_RE = /^[a-zA-Z][a-zA-Z0-9.+-]*$/;
+
+/**
+ * Module-private token. Only code in this module can construct with skipNormalize.
+ * External callers passing `true` or any other value for the 7th parameter
+ * will hit the full validation path.
+ */
+const INTERNAL = Symbol('PackageURL.internal');
 
 export class PackageURL {
   readonly type: string;
@@ -28,27 +39,56 @@ export class PackageURL {
     version: string | null,
     qualifiers: Qualifiers | null,
     subpath: string | null,
-    /** Set to true to skip normalization and validation (used internally by parse). */
-    skipNormalize?: boolean
+    /** @internal Module-private token — external callers must omit this parameter. */
+    _internal?: symbol
   ) {
     if (!type) throw new Error('type is required');
     if (!name) throw new Error('name is required');
 
-    if (skipNormalize) {
+    if (_internal === INTERNAL) {
+      // Trusted internal path (from parse, which already validated/normalized).
+      // Clone qualifiers onto a null-prototype object and freeze.
       this.type = type;
       this.namespace = namespace || null;
       this.name = name;
       this.version = version || null;
-      this.qualifiers = qualifiers && Object.keys(qualifiers).length > 0 ? qualifiers : null;
+      this.qualifiers = qualifiers && Object.keys(qualifiers).length > 0
+        ? Object.freeze(qualifiers)
+        : null;
       this.subpath = subpath || null;
     } else {
+      // Public constructor — full validation and normalization.
+      rejectNullBytes(type, 'type');
+      if (namespace) rejectNullBytes(namespace, 'namespace');
+      rejectNullBytes(name, 'name');
+      if (version) rejectNullBytes(version, 'version');
+      if (subpath) rejectNullBytes(subpath, 'subpath');
+
+      rejectOverlong(type, 'type');
+      if (namespace) rejectOverlong(namespace, 'namespace');
+      rejectOverlong(name, 'name');
+      if (version) rejectOverlong(version, 'version');
+      if (subpath) rejectOverlong(subpath, 'subpath');
+
+      if (!TYPE_RE.test(type)) {
+        throw new Error(`invalid type "${truncate(type)}"`);
+      }
+
       this.type = type.toLowerCase();
 
-      // Validate qualifier keys
+      // Validate qualifier keys and values
       if (qualifiers) {
+        let qCount = 0;
         for (const key of Object.keys(qualifiers)) {
           if (!QUALIFIER_KEY_RE.test(key.toLowerCase())) {
             throw new Error(`invalid qualifier key "${truncate(key)}"`);
+          }
+          rejectNullBytes(key, 'qualifier key');
+          rejectNullBytes(qualifiers[key], 'qualifier value');
+          rejectOverlong(key, 'qualifier key');
+          rejectOverlong(qualifiers[key], 'qualifier value');
+          if (++qCount > MAX_QUALIFIERS) {
+            throw new Error(`too many qualifiers (max ${MAX_QUALIFIERS})`);
           }
         }
       }
@@ -58,6 +98,9 @@ export class PackageURL {
       this.version = normalizeVersion(this.type, version);
       this.qualifiers = normalizeQualifiers(qualifiers);
       this.subpath = normalizeSubpath(subpath);
+
+      // Freeze qualifiers to prevent post-construction mutation
+      if (this.qualifiers) Object.freeze(this.qualifiers);
 
       // Type-specific validation for build
       enforceTypeRules(this.type, this.namespace, this.name, this.qualifiers);
@@ -197,7 +240,7 @@ export class PackageURL {
       normalizedVersion,
       qualifiers,
       subpath,
-      true // skip normalize — we already did it
+      INTERNAL
     );
   }
 
@@ -238,6 +281,7 @@ export class PackageURL {
         '#' +
         this.subpath
           .split('/')
+          .filter((s) => s !== '' && s !== '.' && s !== '..')
           .map((s) => percentEncode(s))
           .join('/');
     }
@@ -453,6 +497,20 @@ function parseQualifiers(raw: string): Qualifiers | null {
 /** Truncate attacker-controlled strings before embedding in error messages. */
 function truncate(s: string, max = 100): string {
   return s.length > max ? s.substring(0, max) + '...' : s;
+}
+
+/** Reject strings containing null bytes. */
+function rejectNullBytes(s: string, field: string): void {
+  if (s.includes('\0')) {
+    throw new Error(`null bytes are not allowed in ${field}`);
+  }
+}
+
+/** Reject strings exceeding the component length limit. */
+function rejectOverlong(s: string, field: string): void {
+  if (s.length > MAX_COMPONENT_LENGTH) {
+    throw new Error(`${field} exceeds maximum length of ${MAX_COMPONENT_LENGTH}`);
+  }
 }
 
 /**

@@ -22,8 +22,13 @@ export class ValidationError extends Error {
   }
 }
 
-const TYPE_RE = /^[a-zA-Z][a-zA-Z0-9.+-]*$/;
+const TYPE_RE = /^[a-z][a-z0-9.+-]*$/;
 const QUALIFIER_KEY_RE = /^[a-z][a-z0-9._-]*$/;
+
+/** Check if a string contains null bytes. */
+function hasNullByte(s: string | null): boolean {
+  return s !== null && s.includes('\0');
+}
 
 /**
  * Validate a PackageURL against the full spec, including type-specific rules.
@@ -39,13 +44,42 @@ export function validate(purl: PackageURL): ValidationError | null {
     errors.push({
       field: 'type',
       code: 'invalid_characters',
-      message: `type "${purl.type}" contains invalid characters (must be ASCII letters, numbers, period, plus, or dash, starting with a letter)`,
+      message: `type "${purl.type}" contains invalid characters (must be lowercase ASCII letters, numbers, period, plus, or dash, starting with a letter)`,
     });
   }
 
   // Name validation
   if (!purl.name) {
     errors.push({ field: 'name', code: 'required', message: 'name is required' });
+  }
+
+  // Null byte checks
+  if (hasNullByte(purl.type)) {
+    errors.push({ field: 'type', code: 'null_byte', message: 'type contains null bytes' });
+  }
+  if (hasNullByte(purl.namespace)) {
+    errors.push({ field: 'namespace', code: 'null_byte', message: 'namespace contains null bytes' });
+  }
+  if (hasNullByte(purl.name)) {
+    errors.push({ field: 'name', code: 'null_byte', message: 'name contains null bytes' });
+  }
+  if (hasNullByte(purl.version)) {
+    errors.push({ field: 'version', code: 'null_byte', message: 'version contains null bytes' });
+  }
+  if (hasNullByte(purl.subpath)) {
+    errors.push({ field: 'subpath', code: 'null_byte', message: 'subpath contains null bytes' });
+  }
+
+  // Subpath traversal check
+  if (purl.subpath) {
+    const segments = purl.subpath.split('/');
+    if (segments.some((s) => s === '..' || s === '.')) {
+      errors.push({
+        field: 'subpath',
+        code: 'traversal',
+        message: 'subpath must not contain "." or ".." segments',
+      });
+    }
   }
 
   // Qualifier key validation
@@ -56,6 +90,13 @@ export function validate(purl: PackageURL): ValidationError | null {
           field: 'qualifiers',
           code: 'invalid_key',
           message: `qualifier key "${key}" is invalid (must be lowercase ASCII letters, numbers, period, dash, or underscore, starting with a letter)`,
+        });
+      }
+      if (hasNullByte(purl.qualifiers[key])) {
+        errors.push({
+          field: 'qualifiers',
+          code: 'null_byte',
+          message: `qualifier value for "${key}" contains null bytes`,
         });
       }
     }

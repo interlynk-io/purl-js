@@ -1,17 +1,17 @@
-# @interlynk/lynk-js-purl
+# @interlynk-io/purl-js
 
 A spec-compliant [Package URL (PURL)](https://github.com/package-url/purl-spec) parser, builder, and validator for JavaScript/TypeScript. Supports all 39 registered PURL types with type-specific normalization and validation.
 
 ## Installation
 
 ```bash
-npm install @interlynk/lynk-js-purl
+npm install @interlynk-io/purl-js
 ```
 
 ## Quick Start
 
 ```typescript
-import { PackageURL, tryParse, isValid, validate } from '@interlynk/lynk-js-purl';
+import { PackageURL, tryParse, isValid, validate } from '@interlynk-io/purl-js';
 
 // Parse a PURL string
 const purl = PackageURL.parse('pkg:npm/%40angular/core@16.2.0');
@@ -187,7 +187,7 @@ if (err) {
 Look up a registered PURL type definition.
 
 ```typescript
-import { lookupType } from '@interlynk/lynk-js-purl';
+import { lookupType } from '@interlynk-io/purl-js';
 
 const pypi = lookupType('pypi');
 console.log(pypi?.namespace.requirement);  // "prohibited"
@@ -199,7 +199,7 @@ console.log(pypi?.name.caseSensitive);     // false
 Get all registered type identifiers, sorted alphabetically.
 
 ```typescript
-import { registeredTypes } from '@interlynk/lynk-js-purl';
+import { registeredTypes } from '@interlynk-io/purl-js';
 
 console.log(registeredTypes());
 // ["alpm", "apk", "bazel", "bitbucket", "bitnami", "cargo", ...]
@@ -207,10 +207,10 @@ console.log(registeredTypes());
 
 #### `registerType(def: TypeDefinition): void`
 
-Register or override a custom type definition.
+Register a custom type definition. Cannot override the 39 built-in spec types.
 
 ```typescript
-import { registerType } from '@interlynk/lynk-js-purl';
+import { registerType } from '@interlynk-io/purl-js';
 
 registerType({
   type: 'custom',
@@ -342,6 +342,88 @@ All 39 PURL types from the specification are supported:
 | `vscode-extension` | VS Code extensions | required |
 | `yocto` | Yocto recipes | required |
 
+## Security
+
+This library is designed to safely handle untrusted input. All public APIs enforce the following protections:
+
+### Input validation
+
+- **`parse()`** enforces a 64 KB maximum input length and a 128-qualifier limit to prevent denial-of-service.
+- **Constructor** validates type characters against `^[a-zA-Z][a-zA-Z0-9.+-]*$`, rejects null bytes (`\0`) in every field, and enforces a 4 KB per-component length limit.
+- **Percent-encoding** rejects malformed `%XX` sequences and null bytes (`%00`) during parsing.
+
+### Immutability
+
+- All qualifier objects use `Object.create(null)` (no prototype) and are `Object.freeze`d after construction. Post-construction mutation throws in strict mode.
+- `lookupType()` returns deeply frozen objects. Mutating a returned `TypeDefinition` throws.
+
+### Internal bypass protection
+
+- The constructor's internal skip-normalization path is gated by a module-private `Symbol`. External callers cannot bypass validation — passing `true` or any other value for the 7th parameter triggers full validation.
+
+### Registry protection
+
+- Built-in spec types (all 39) cannot be overridden via `registerType()`. Attempting to do so throws. Custom types are still allowed.
+
+### Defense-in-depth
+
+- `toString()` re-filters `.` and `..` from subpath segments to prevent path traversal, even if internal state were somehow corrupted.
+- Error messages truncate attacker-controlled strings to prevent log flooding.
+- `validate()` checks for null bytes, subpath traversal, lowercase type, and lowercase qualifier keys — catching invalid states that could arise from manual object construction.
+
+### Recommendations for consumers
+
+```typescript
+// Always prefer parse() or tryParse() for untrusted input.
+// The constructor is for programmatic building with trusted components.
+const purl = tryParse(userInput);
+if (!purl) {
+  // handle invalid input
+}
+
+// If you must use the constructor with user-supplied components,
+// always call validate() afterward:
+const built = new PackageURL(type, ns, name, ver, quals, sub);
+const err = built.validate();
+if (err) {
+  // handle validation errors
+}
+```
+
+## Performance
+
+The encoding layer is optimized for the typical PURL workload: short ASCII strings (package names, namespaces) with occasional percent-encoding.
+
+### Benchmarks
+
+Run with `npx vitest bench`. Results on Apple M-series (Node.js 22):
+
+#### `percentEncode`
+
+| Input | ops/sec | Latency (mean) |
+|-------|---------|----------------|
+| Short ASCII (7 chars, e.g. `express`) | **33M** | 30 ns |
+| Mixed (46 chars, e.g. URL with special chars) | **2.7M** | 370 ns |
+| Unicode (12 chars, CJK) | **2.9M** | 350 ns |
+| Long mixed (1550 chars) | **152K** | 6.6 μs |
+
+#### `percentDecode`
+
+| Input | ops/sec | Latency (mean) |
+|-------|---------|----------------|
+| Short ASCII (no `%XX`) | **35M** | 28 ns |
+| Mixed (some `%XX`) | **5M** | 200 ns |
+| Unicode (dense `%XX`) | **4M** | 250 ns |
+| Long mixed | **569K** | 1.8 μs |
+
+### Optimizations
+
+- **Fast-path short-circuit**: `percentEncode` scans via `charCodeAt` and returns the input unchanged if every character is unreserved ASCII. This is the common case for package names and namespaces.
+- **Lookup table encoding**: A pre-computed 256-entry `BYTE_TO_ENCODED` table maps every byte to its output string. Eliminates per-byte branching, `toString(16)`, and `padStart` calls.
+- **Shared `TextEncoder`**: A single module-level instance avoids per-call allocation.
+- **Fast-path decode**: `percentDecode` returns the input unchanged if the string contains no `%` character, skipping `decodeURIComponent` entirely.
+- **O(1) slash stripping**: Leading/trailing slash removal in `parse()` uses index scanning with a single `substring` call instead of a loop of `substring` calls.
+
 ## Development
 
 ### Prerequisites
@@ -357,12 +439,18 @@ npm install
 
 ### Run Tests
 
-The library includes 514 spec-compliance tests covering all types:
+The library includes 538 tests: 514 spec-compliance tests covering all types plus 24 security tests.
 
 ```bash
 npm test              # Run all tests
 npm run test:watch    # Watch mode
 npm run test:coverage # With coverage
+```
+
+### Run Benchmarks
+
+```bash
+npx vitest bench
 ```
 
 ### Build

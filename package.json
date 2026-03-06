@@ -1,5 +1,5 @@
 {
-  "name": "@interlynk/lynk-js-purl",
+  "name": "@interlynk-io/purl-js",
   "version": "1.0.0",
   "description": "A spec-compliant Package URL (PURL) parser, builder, and validator with full type registry",
   "type": "module",
