@@ -34,12 +34,12 @@ const encoder = new TextEncoder();
  */
 export function percentEncode(s: string): string {
   const bytes = encoder.encode(s);
-  const parts: string[] = new Array(bytes.length);
+  let result = '';
   for (let i = 0; i < bytes.length; i++) {
     const b = bytes[i];
-    parts[i] = b < 128 && UNRESERVED[b] ? String.fromCharCode(b) : HEX_ENCODE[b];
+    result += b < 128 && UNRESERVED[b] ? String.fromCharCode(b) : HEX_ENCODE[b];
   }
-  return parts.join('');
+  return result;
 }
 
 /**
@@ -47,6 +47,8 @@ export function percentEncode(s: string): string {
  * Rejects null bytes (%00) which are a common injection vector.
  */
 export function percentDecode(s: string): string {
+  // Fast path: no percent sequences means nothing to decode and no null byte risk.
+  if (!s.includes('%')) return s;
   try {
     const decoded = decodeURIComponent(s);
     if (decoded.includes('\0')) {
