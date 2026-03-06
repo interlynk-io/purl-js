@@ -1,0 +1,37 @@
+{
+  "name": "@interlynk/lynk-js-purl",
+  "version": "1.0.0",
+  "description": "A spec-compliant Package URL (PURL) parser, builder, and validator with full type registry",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.18"
+  },
+  "keywords": [
+    "purl",
+    "packageurl",
+    "package-url",
+    "sbom",
+    "spdx",
+    "cyclonedx"
+  ],
+  "license": "Apache-2.0"
+}
