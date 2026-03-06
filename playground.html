@@ -237,6 +237,49 @@ document.getElementById('parse-btn').addEventListener('click', doParse);
 document.getElementById('parse-input').addEventListener('keydown', e => { if (e.key === 'Enter') doParse(); });
 
 // --- Build Tab ---
+const buildExamples = [
+  { label: 'npm scoped', type: 'npm', ns: '@angular', name: 'core', version: '16.2.0', quals: null, subpath: '' },
+  { label: 'maven', type: 'maven', ns: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0', quals: { classifier: 'sources' }, subpath: '' },
+  { label: 'docker', type: 'docker', ns: 'library', name: 'nginx', version: 'latest', quals: { arch: 'amd64' }, subpath: '' },
+  { label: 'pypi', type: 'pypi', ns: '', name: 'Django', version: '4.2', quals: null, subpath: '' },
+  { label: 'cargo', type: 'cargo', ns: '', name: 'serde', version: '1.0.197', quals: null, subpath: '' },
+  { label: 'golang', type: 'golang', ns: 'github.com/gorilla', name: 'mux', version: '1.8.1', quals: null, subpath: '' },
+];
+
+function fillBuildForm(ex) {
+  document.getElementById('build-type').value = ex.type;
+  document.getElementById('build-type').dispatchEvent(new Event('change'));
+  document.getElementById('build-namespace').value = ex.ns || '';
+  document.getElementById('build-name').value = ex.name;
+  document.getElementById('build-version').value = ex.version || '';
+  document.getElementById('build-subpath').value = ex.subpath || '';
+  // Clear existing qualifier rows
+  const qContainer = document.getElementById('build-qualifiers');
+  clear(qContainer);
+  // Add qualifier rows
+  if (ex.quals) {
+    for (const [k, v] of Object.entries(ex.quals)) {
+      addQualRow();
+      const rows = qContainer.querySelectorAll('.qual-row');
+      const lastRow = rows[rows.length - 1];
+      const inputs = lastRow.querySelectorAll('input');
+      inputs[0].value = k;
+      inputs[1].value = v;
+    }
+  }
+  doBuild();
+}
+
+const buildExContainer = document.createElement('div');
+buildExContainer.className = 'quick-examples';
+buildExContainer.appendChild(el('span', null, 'Try:'));
+buildExamples.forEach(ex => {
+  const btn = el('button', { className: 'quick-ex', textContent: ex.label });
+  btn.addEventListener('click', () => fillBuildForm(ex));
+  buildExContainer.appendChild(btn);
+});
+document.getElementById('tab-build').insertBefore(buildExContainer, document.getElementById('tab-build').firstChild);
+
 function addQualRow() {
   const container = document.getElementById('build-qualifiers');
   const row = el('div', { className: 'qual-row' });
@@ -299,16 +342,30 @@ document.getElementById('build-type').addEventListener('change', () => {
 });
 
 // --- Validate Tab ---
-const validateExamples = [
+const validateValidExamples = [
+  ['npm', 'pkg:npm/%40angular/core@16.2.0'],
+  ['maven', 'pkg:maven/org.apache.commons/commons-lang3@3.12.0'],
+  ['pypi', 'pkg:pypi/requests@2.31.0'],
+  ['docker', 'pkg:docker/library/nginx@latest?arch=amd64'],
+  ['generic+checksum', 'pkg:generic/openssl@1.1.10g?checksum=sha256:de4d501267da'],
+];
+const validateInvalidExamples = [
   ['no scheme', 'EnterpriseLibrary.Common@6.0.1304'],
   ['maven no ns', 'pkg:maven/commons@1.0'],
   ['bad qualifier', 'pkg:npm/myartifact@1.0.0?in%20production=true'],
   ['cpan ::', 'pkg:cpan/GDT/URI::PackageURL'],
   ['swift no ns', 'pkg:swift/Alamofire@5.4.3'],
+  ['julia no uuid', 'pkg:julia/Flux@0.13'],
 ];
 const valExContainer = document.getElementById('validate-examples');
-valExContainer.appendChild(el('span', null, 'Try invalid:'));
-validateExamples.forEach(([label, purl]) => {
+valExContainer.appendChild(el('span', null, 'Valid:'));
+validateValidExamples.forEach(([label, purl]) => {
+  const btn = el('button', { className: 'quick-ex', textContent: label });
+  btn.addEventListener('click', () => { document.getElementById('validate-input').value = purl; doValidate(); });
+  valExContainer.appendChild(btn);
+});
+valExContainer.appendChild(el('span', { style: 'margin-left:8px' }, 'Invalid:'));
+validateInvalidExamples.forEach(([label, purl]) => {
   const btn = el('button', { className: 'quick-ex', textContent: label });
   btn.addEventListener('click', () => { document.getElementById('validate-input').value = purl; doValidate(); });
   valExContainer.appendChild(btn);
