@@ -459,10 +459,17 @@ function normalizeSubpath(subpath: string | null): string | null {
 }
 
 function parseSubpath(raw: string): string | null {
-  const segments = raw
-    .split('/')
-    .map((s) => percentDecode(s))
-    .filter((s) => s !== '' && s !== '.' && s !== '..');
+  const segments: string[] = [];
+  for (const s of raw.split('/')) {
+    if (s === '' || s === '.' || s === '..') continue;
+    const decoded = percentDecode(s);
+    if (decoded.includes('/')) {
+      throw new Error(
+        `subpath segment "${truncate(s)}" decodes to a value containing "/", which would corrupt segment boundaries`
+      );
+    }
+    segments.push(decoded);
+  }
   return segments.length > 0 ? segments.join('/') : null;
 }
 
@@ -486,6 +493,9 @@ function parseQualifiers(raw: string): Qualifiers | null {
     if (value !== '') {
       if (++count > MAX_QUALIFIERS) {
         throw new Error(`too many qualifiers (max ${MAX_QUALIFIERS})`);
+      }
+      if (key in result) {
+        throw new Error(`duplicate qualifier key "${truncate(key)}"`);
       }
       result[key] = value;
       hasKeys = true;

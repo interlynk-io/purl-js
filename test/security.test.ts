@@ -156,3 +156,25 @@ describe('security: toString defense-in-depth', () => {
     expect(str).not.toMatch(/#.*\.\./);
   });
 });
+
+describe('spec compliance: subpath %2F rejection', () => {
+  it('rejects encoded / in subpath segment', () => {
+    expect(() => PackageURL.parse('pkg:npm/foo@1.0#src%2Fmain')).toThrow(/subpath segment/);
+  });
+
+  it('allows normal subpath with literal /', () => {
+    const p = PackageURL.parse('pkg:npm/foo@1.0#src/main');
+    expect(p.subpath).toBe('src/main');
+  });
+});
+
+describe('spec compliance: duplicate qualifier keys', () => {
+  it('rejects duplicate qualifier keys', () => {
+    expect(() => PackageURL.parse('pkg:npm/foo?arch=x86&arch=arm64')).toThrow(/duplicate qualifier key/);
+  });
+
+  it('allows unique qualifier keys', () => {
+    const p = PackageURL.parse('pkg:npm/foo?arch=x86&os=linux');
+    expect(p.qualifiers).toEqual({ arch: 'x86', os: 'linux' });
+  });
+});

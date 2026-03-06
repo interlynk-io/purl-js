@@ -122,7 +122,7 @@ function defType(
   builtinTypes.add(type);
 }
 
-// Register all 39 PURL types from the spec
+// Register all 38 PURL types from the spec
 
 defType('alpm', 'Arch Linux packages', 'Arch Linux packages', {
   repo: 'https://archlinux.org/packages',
@@ -280,7 +280,10 @@ defType('maven', 'Maven', 'Maven JARs and artifacts', {
 
 defType('mlflow', 'MLflow', 'MLflow models', {
   ns: 'prohibited',
-  nameCaseSensitive: false,
+  // Case sensitivity is context-dependent: Databricks = insensitive, Azure ML = sensitive.
+  // Handled via special case in normalizeName(); keep default (true) here to avoid
+  // the generic lowercasing path, which would be wrong for Azure ML.
+  nameCaseSensitive: true,
 });
 
 defType('npm', 'npm', 'Node npm packages', {

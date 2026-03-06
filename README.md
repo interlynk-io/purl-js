@@ -1,6 +1,6 @@
 # @interlynk-io/purl-js
 
-A spec-compliant [Package URL (PURL)](https://github.com/package-url/purl-spec) parser, builder, and validator for JavaScript/TypeScript. Supports all 39 registered PURL types with type-specific normalization and validation.
+A spec-compliant [Package URL (PURL)](https://github.com/package-url/purl-spec) parser, builder, and validator for JavaScript/TypeScript. Supports all 38 registered PURL types with type-specific normalization and validation.
 
 ## Installation
 
@@ -207,7 +207,7 @@ console.log(registeredTypes());
 
 #### `registerType(def: TypeDefinition): void`
 
-Register a custom type definition. Cannot override the 39 built-in spec types.
+Register a custom type definition. Cannot override the 38 built-in spec types.
 
 ```typescript
 import { registerType } from '@interlynk-io/purl-js';
@@ -299,7 +299,7 @@ PackageURL.parse('pkg:huggingface/google/bert-base-uncased@CD5EF3A3').toString()
 
 ## Supported Types
 
-All 39 PURL types from the specification are supported:
+All 38 PURL types from the specification are supported:
 
 | Type | Description | Namespace |
 | ---- | ----------- | --------- |
@@ -342,6 +342,33 @@ All 39 PURL types from the specification are supported:
 | `vscode-extension` | VS Code extensions | required |
 | `yocto` | Yocto recipes | required |
 
+## Spec Compliance
+
+This library is fully compliant with the [Package URL specification](https://github.com/package-url/purl-spec) (ECMA-427 / TC54). The test suite includes all 514 official spec tests (18 core specification tests + 496 type-specific tests) sourced directly from the upstream [`package-url/purl-spec`](https://github.com/package-url/purl-spec/tree/main/tests) repository, plus 28 additional security tests.
+
+### Verified Compliance
+
+- **Right-to-left parsing algorithm** — subpath (`#`), qualifiers (`?`), scheme (`:`), type (`/`), version (`@`), name (`/`), namespace
+- **Percent-encoding** — unreserved set `A-Za-z0-9.-_~:` not encoded; uppercase hex (`%2F` not `%2f`); colons preserved unencoded
+- **Checksum qualifier** — comma-separated values are percent-encoded as `%2C` in canonical output, matching spec expectations
+- **Subpath safety** — `.` and `..` segments are discarded; encoded `/` (`%2F`) in subpath segments is rejected to prevent boundary corruption
+- **Qualifier keys** — must start with a letter, contain only `a-z0-9._-`, are lowercased; duplicates are rejected; empty values are discarded; sorted lexicographically in output
+- **Namespace segment integrity** — encoded `/` (`%2F`) inside namespace segments is rejected to prevent segment boundary corruption
+- **Scheme validation** — only `pkg:` is accepted; encoded colons (`%3A`) in the scheme position are rejected
+- **Type-specific normalization** — PyPI (`_` → `-`, lowercase), npm (lowercase name/namespace), Hugging Face (version lowercase), MLflow (conditional case based on `repository_url`), and all other type rules
+- **Namespace enforcement** — required/prohibited/optional per type definition (e.g., maven requires namespace, pypi prohibits it)
+- **Required qualifier enforcement** — Julia `uuid`, SWID `tag_id`, and all other required qualifiers per type
+- **CPAN name validation** — `::` in distribution name is rejected
+- **`@` handling** — correctly distinguishes npm scoped packages (`@scope/name`) from version separators
+
+### Running Spec Tests
+
+The official test data is bundled in `testdata/`. To verify compliance:
+
+```bash
+npm test   # Runs all 542 tests (514 spec + 28 security)
+```
+
 ## Security
 
 This library is designed to safely handle untrusted input. All public APIs enforce the following protections:
@@ -363,7 +390,7 @@ This library is designed to safely handle untrusted input. All public APIs enfor
 
 ### Registry protection
 
-- Built-in spec types (all 39) cannot be overridden via `registerType()`. Attempting to do so throws. Custom types are still allowed.
+- Built-in spec types (all 38) cannot be overridden via `registerType()`. Attempting to do so throws. Custom types are still allowed.
 
 ### Defense-in-depth
 
@@ -439,7 +466,7 @@ npm install
 
 ### Run Tests
 
-The library includes 538 tests: 514 spec-compliance tests covering all types plus 24 security tests.
+The library includes 542 tests: 514 spec-compliance tests covering all types plus 28 security tests.
 
 ```bash
 npm test              # Run all tests
@@ -472,7 +499,7 @@ This opens a local dev server at `http://localhost:5555/playground.html` with fo
 - **Parse** - Enter a PURL string and see parsed components
 - **Build** - Enter components and generate a PURL string
 - **Validate** - Validate a PURL string against spec rules
-- **Type Registry** - Browse all 39 registered types and their rules
+- **Type Registry** - Browse all 38 registered types and their rules
 
 ## License
 
