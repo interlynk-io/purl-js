@@ -423,25 +423,25 @@ The encoding layer is optimized for the typical PURL workload: short ASCII strin
 
 ### Benchmarks
 
-Run with `npx vitest bench`. Results on Apple M-series (Node.js 22):
+Run with `npx vitest bench`. Results on Apple M-series (Node.js 24):
 
 #### `percentEncode`
 
 | Input | ops/sec | Latency (mean) |
 |-------|---------|----------------|
-| Short ASCII (7 chars, e.g. `express`) | **33M** | 30 ns |
+| Short ASCII (7 chars, e.g. `express`) | **34M** | 29 ns |
 | Mixed (46 chars, e.g. URL with special chars) | **2.7M** | 370 ns |
-| Unicode (12 chars, CJK) | **2.9M** | 350 ns |
-| Long mixed (1550 chars) | **152K** | 6.6 μs |
+| Unicode (12 chars, CJK) | **2.9M** | 340 ns |
+| Long mixed (1550 chars) | **150K** | 6.6 μs |
 
 #### `percentDecode`
 
 | Input | ops/sec | Latency (mean) |
 |-------|---------|----------------|
-| Short ASCII (no `%XX`) | **35M** | 28 ns |
-| Mixed (some `%XX`) | **5M** | 200 ns |
-| Unicode (dense `%XX`) | **4M** | 250 ns |
-| Long mixed | **569K** | 1.8 μs |
+| Short ASCII (no `%XX`) | **38M** | 26 ns |
+| Mixed (some `%XX`) | **4.9M** | 206 ns |
+| Unicode (dense `%XX`) | **4M** | 252 ns |
+| Long mixed | **583K** | 1.7 μs |
 
 ### Optimizations
 
