@@ -488,7 +488,7 @@ npm run build  # Outputs to ./dist
 
 ### Playground
 
-A browser-based playground is included for manual testing. It provides tabs for parsing, building, validating, and browsing the type registry.
+An interactive browser-based playground is included for exploring and testing PURL parsing, building, and validation. No build step is required — Vite serves the TypeScript source directly.
 
 ```bash
 npx vite --open playground.html --port 5555
@@ -496,10 +496,10 @@ npx vite --open playground.html --port 5555
 
 This opens a local dev server at `http://localhost:5555/playground.html` with four tabs:
 
-- **Parse** - Enter a PURL string and see parsed components
-- **Build** - Enter components and generate a PURL string
-- **Validate** - Validate a PURL string against spec rules
-- **Type Registry** - Browse all 38 registered types and their rules
+- **Parse** — Paste or type a PURL string and instantly see all parsed components (type, namespace, name, version, qualifiers, subpath), the normalized canonical form, and type metadata. Includes quick-try buttons for npm, maven, pypi, docker, golang, and oci examples.
+- **Build** — Select a type from the dropdown, fill in components, and dynamically add qualifier key-value pairs. The namespace field auto-disables for types that prohibit it. Click **Build** to generate the canonical PURL string (click to copy).
+- **Validate** — Enter a PURL string and see either a green **VALID** badge with parsed components, or detailed error cards showing which field failed, the error code, and a human-readable message. Quick-try buttons demonstrate common validation failures (missing scheme, missing namespace, invalid qualifier key, CPAN `::` in name).
+- **Type Registry** — Browse all 38 registered types. Each type shows its namespace/name/version requirements, case sensitivity rules, default repository URL, type-specific qualifiers with their requirements and defaults, and clickable example PURLs that jump to the Parse tab.
 
 ## License
 
