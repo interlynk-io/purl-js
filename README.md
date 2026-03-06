@@ -366,7 +366,7 @@ This library is fully compliant with the [Package URL specification](https://git
 The official test data is bundled in `testdata/`. To verify compliance:
 
 ```bash
-npm test   # Runs all 542 tests (514 spec + 28 security)
+npm test   # Runs all 752 tests (514 spec + 210 ECMA-427 + 28 security)
 ```
 
 ## Security
@@ -466,7 +466,7 @@ npm install
 
 ### Run Tests
 
-The library includes 542 tests: 514 spec-compliance tests covering all types plus 28 security tests.
+The library includes 752 tests: 514 upstream spec data-driven tests, 210 ECMA-427 compliance tests, and 28 security tests.
 
 ```bash
 npm test              # Run all tests
