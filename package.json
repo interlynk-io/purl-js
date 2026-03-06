@@ -33,5 +33,13 @@
     "spdx",
     "cyclonedx"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/interlynk-io/purl-js.git"
+  },
+  "homepage": "https://github.com/interlynk-io/purl-js#readme",
+  "bugs": {
+    "url": "https://github.com/interlynk-io/purl-js/issues"
+  },
   "license": "Apache-2.0"
 }
