@@ -243,7 +243,19 @@ registerType({
 Fully compliant with [ECMA-427 / TC54](https://github.com/package-url/purl-spec). The test suite includes all 514 official spec tests sourced from the upstream [`package-url/purl-spec`](https://github.com/package-url/purl-spec/tree/main/tests) repository, plus a dedicated 210-test ECMA-427 compliance suite.
 
 **Verified:**
-right-to-left parsing algorithm, percent-encoding (unreserved set `A-Za-z0-9.-_~:`, uppercase hex), checksum qualifier `%2C` encoding, subpath `.`/`..` discard and `%2F` rejection, qualifier key validation and duplicate rejection, namespace `%2F` segment boundary protection, scheme validation, type-specific normalization (PyPI `_`→`-`, npm lowercase, Hugging Face version lowercase, MLflow conditional case), namespace required/prohibited enforcement, required qualifier enforcement (Julia `uuid`, SWID `tag_id`), CPAN `::` rejection, npm `@scope` handling.
+
+- Right-to-left parsing algorithm
+- Percent-encoding (unreserved set `A-Za-z0-9.-_~:`, uppercase hex)
+- Checksum qualifier `%2C` encoding
+- Subpath `.`/`..` discard and `%2F` rejection
+- Qualifier key validation and duplicate rejection
+- Namespace `%2F` segment boundary protection
+- Scheme validation
+- Type-specific normalization (PyPI `_`→`-`, npm lowercase, Hugging Face version lowercase, MLflow conditional case)
+- Namespace required/prohibited enforcement
+- Required qualifier enforcement (Julia `uuid`, SWID `tag_id`)
+- CPAN `::` rejection
+- npm `@scope` handling
 
 ## Security
 
@@ -284,7 +296,13 @@ Run with `npx vitest bench`. Results on Apple M-series (Node.js 24):
 | | Unicode | **4M** | 252 ns |
 | | Long | **583K** | 1.7 μs |
 
-**Optimizations:** fast-path short-circuit for all-ASCII strings, pre-computed 256-entry byte→encoded lookup table, shared `TextEncoder` instance, fast-path decode when no `%` present, O(1) slash stripping via index scanning.
+**Optimizations:**
+
+- Fast-path short-circuit for all-ASCII strings
+- Pre-computed 256-entry byte→encoded lookup table
+- Shared `TextEncoder` instance
+- Fast-path decode when no `%` present
+- O(1) slash stripping via index scanning
 
 ## Development
 
