@@ -9,7 +9,7 @@
  * Everything else is percent-encoded as %XX (uppercase hex).
  */
 
-// Lookup table: true for unreserved bytes that don't need encoding.
+// Unreserved byte check for the fast-path scan (operates on char codes).
 const UNRESERVED = new Uint8Array(128);
 for (let c = 0x41; c <= 0x5a; c++) UNRESERVED[c] = 1; // A-Z
 for (let c = 0x61; c <= 0x7a; c++) UNRESERVED[c] = 1; // a-z
@@ -20,10 +20,13 @@ UNRESERVED[0x5f] = 1; // _
 UNRESERVED[0x7e] = 1; // ~
 UNRESERVED[0x3a] = 1; // :
 
-// Pre-computed hex encoding table for every byte value 0x00-0xFF.
-const HEX_ENCODE: string[] = new Array(256);
+// Single lookup: byte → output string (char or %XX). Eliminates per-byte branching.
+const BYTE_TO_ENCODED: string[] = new Array(256);
 for (let i = 0; i < 256; i++) {
-  HEX_ENCODE[i] = '%' + i.toString(16).toUpperCase().padStart(2, '0');
+  BYTE_TO_ENCODED[i] =
+    i < 128 && UNRESERVED[i]
+      ? String.fromCharCode(i)
+      : '%' + i.toString(16).toUpperCase().padStart(2, '0');
 }
 
 const encoder = new TextEncoder();
@@ -33,11 +36,21 @@ const encoder = new TextEncoder();
  * Encodes all characters except: A-Za-z0-9 . - _ ~ :
  */
 export function percentEncode(s: string): string {
+  // Fast path: if every char is unreserved ASCII, return the input unchanged.
+  let needsEncoding = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c >= 128 || !UNRESERVED[c]) {
+      needsEncoding = true;
+      break;
+    }
+  }
+  if (!needsEncoding) return s;
+
   const bytes = encoder.encode(s);
   let result = '';
   for (let i = 0; i < bytes.length; i++) {
-    const b = bytes[i];
-    result += b < 128 && UNRESERVED[b] ? String.fromCharCode(b) : HEX_ENCODE[b];
+    result += BYTE_TO_ENCODED[bytes[i]];
   }
   return result;
 }
