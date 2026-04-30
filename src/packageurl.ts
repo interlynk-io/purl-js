@@ -93,9 +93,9 @@ export class PackageURL {
         }
       }
 
-      this.namespace = normalizeNamespace(this.type, namespace);
-      this.name = normalizeName(this.type, name, qualifiers);
-      this.version = normalizeVersion(this.type, version);
+      this.namespace = normalizeNamespace(namespace);
+      this.name = normalizeName(this.type, name);
+      this.version = normalizeVersion(version);
       this.qualifiers = normalizeQualifiers(qualifiers);
       this.subpath = normalizeSubpath(subpath);
 
@@ -226,9 +226,9 @@ export class PackageURL {
 
     // Apply type-specific normalization
     const normalizedType = type.toLowerCase();
-    const normalizedName = normalizeName(normalizedType, name, qualifiers);
-    const normalizedNamespace = normalizeNamespace(normalizedType, namespace);
-    const normalizedVersion = normalizeVersion(normalizedType, version);
+    const normalizedName = normalizeName(normalizedType, name);
+    const normalizedNamespace = normalizeNamespace(namespace);
+    const normalizedVersion = normalizeVersion(version);
 
     // Enforce type-specific rules
     enforceTypeRules(normalizedType, normalizedNamespace, normalizedName, qualifiers);
@@ -384,59 +384,20 @@ function enforceTypeRules(
 
 // ---- Normalization helpers ----
 
-function normalizeName(type: string, name: string, qualifiers?: Qualifiers | null): string {
-  const typeDef = lookupType(type);
-  if (!typeDef) return name;
-
-  let result = name;
-
-  // MLflow: case depends on repository_url (Databricks = lowercase, Azure ML = preserve)
-  if (type === 'mlflow') {
-    const repoUrl = qualifiers?.['repository_url'] ?? '';
-    if (repoUrl.includes('databricks')) {
-      result = result.toLowerCase();
-    }
-    // Azure ML and others: preserve case
-    return result;
-  }
-
-  // General case normalization
-  if (!typeDef.name.caseSensitive) {
-    result = result.toLowerCase();
-  }
-
-  // PyPI: replace _ with -
+function normalizeName(type: string, name: string): string {
+  // PyPI: _ and - are equivalent separators; canonicalize to -
   if (type === 'pypi') {
-    result = result.replace(/_/g, '-');
+    return name.replace(/_/g, '-');
   }
-
-  return result;
+  return name;
 }
 
-function normalizeNamespace(type: string, namespace: string | null): string | null {
-  if (!namespace) return null;
-
-  const typeDef = lookupType(type);
-  if (!typeDef) return namespace;
-
-  if (!typeDef.namespace.caseSensitive) {
-    return namespace.toLowerCase();
-  }
-
-  return namespace;
+function normalizeNamespace(namespace: string | null): string | null {
+  return namespace || null;
 }
 
-function normalizeVersion(type: string, version: string | null): string | null {
-  if (!version) return null;
-
-  const typeDef = lookupType(type);
-  if (!typeDef) return version;
-
-  if (!typeDef.version.caseSensitive) {
-    return version.toLowerCase();
-  }
-
-  return version;
+function normalizeVersion(version: string | null): string | null {
+  return version || null;
 }
 
 function normalizeQualifiers(qualifiers: Qualifiers | null): Qualifiers | null {

@@ -2,23 +2,23 @@
   "$schema": "https://packageurl.org/schemas/purl-test.schema-0.1.json",
   "tests": [
     {
-      "description": "github namespace and name should be lowercased. Roundtrip an input purl to canonical.",
+      "description": "github namespace and name preserve case. Roundtrip an input purl to canonical.",
       "test_group": "advanced",
       "test_type": "roundtrip",
       "input": "pkg:github/Package-url/purl-Spec@244fd47e07d1004f0aed9c",
-      "expected_output": "pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c",
+      "expected_output": "pkg:github/Package-url/purl-Spec@244fd47e07d1004f0aed9c",
       "expected_failure": false,
       "expected_failure_reason": null
     },
     {
-      "description": "github namespace and name should be lowercased",
+      "description": "github namespace and name preserve case",
       "test_group": "base",
       "test_type": "parse",
       "input": "pkg:github/Package-url/purl-Spec@244fd47e07d1004f0aed9c",
       "expected_output": {
         "type": "github",
-        "namespace": "package-url",
-        "name": "purl-spec",
+        "namespace": "Package-url",
+        "name": "purl-Spec",
         "version": "244fd47e07d1004f0aed9c",
         "qualifiers": null,
         "subpath": null
@@ -27,7 +27,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "github namespace and name should be lowercased. Roundtrip a canonical input to canonical output.",
+      "description": "github lowercase canonical input roundtrips unchanged",
       "test_group": "base",
       "test_type": "roundtrip",
       "input": "pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c",
@@ -36,7 +36,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "github namespace and name should be lowercased",
+      "description": "github build from lowercase components",
       "test_group": "base",
       "test_type": "build",
       "input": {

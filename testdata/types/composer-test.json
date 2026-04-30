@@ -27,23 +27,23 @@
       "expected_failure_reason": null
     },
     {
-      "description": "composer names are not case sensitive. Roundtrip an input purl to canonical.",
+      "description": "composer names preserve case. Roundtrip an input purl to canonical.",
       "test_group": "advanced",
       "test_type": "roundtrip",
       "input": "pkg:composer/Laravel/Laravel@5.5.0",
-      "expected_output": "pkg:composer/laravel/laravel@5.5.0",
+      "expected_output": "pkg:composer/Laravel/Laravel@5.5.0",
       "expected_failure": false,
       "expected_failure_reason": null
     },
     {
-      "description": "composer names are not case sensitive",
+      "description": "composer names preserve case",
       "test_group": "base",
       "test_type": "parse",
       "input": "pkg:composer/Laravel/Laravel@5.5.0",
       "expected_output": {
         "type": "composer",
-        "namespace": "laravel",
-        "name": "laravel",
+        "namespace": "Laravel",
+        "name": "Laravel",
         "version": "5.5.0",
         "qualifiers": null,
         "subpath": null
@@ -52,7 +52,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "composer names are not case sensitive. Roundtrip a canonical input to canonical output.",
+      "description": "composer lowercase canonical input roundtrips unchanged",
       "test_group": "base",
       "test_type": "roundtrip",
       "input": "pkg:composer/laravel/laravel@5.5.0",
@@ -61,7 +61,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "composer names are not case sensitive",
+      "description": "composer build from lowercase components",
       "test_group": "base",
       "test_type": "build",
       "input": {

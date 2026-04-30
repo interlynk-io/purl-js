@@ -337,8 +337,10 @@ npm run build  # Outputs to ./dist
 Interactive browser-based playground for exploring PURL parsing, building, and validation. No build step required — Vite serves TypeScript directly.
 
 ```bash
-npx vite --open playground.html --port 5555
+npm run playground
 ```
+
+> Note: opening `playground.html` directly via `file://` will not work — the page imports `./src/index.ts` and needs a TypeScript-aware dev server.
 
 Four tabs:
 
