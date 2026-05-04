@@ -410,11 +410,10 @@ function buildTypeInfoBox(type) {
   const def = lookupType(type);
   if (!def) return el('div');
   const box = el('div', { className: 'type-info' });
-  const cs = (b) => b ? 'case-sensitive' : 'case-insensitive';
   const header = el('div', { style: 'font-size:11px;color:#8b949e' });
   header.appendChild(document.createTextNode('Type: '));
   header.appendChild(el('strong', null, def.typeName));
-  header.appendChild(document.createTextNode(` \u00b7 Namespace: ${def.namespace.requirement} \u00b7 Name: ${cs(def.name.caseSensitive)}`));
+  header.appendChild(document.createTextNode(` \u00b7 Namespace: ${def.namespace.requirement}`));
   box.appendChild(header);
   return box;
 }
@@ -427,14 +426,20 @@ function showTypeInfo() {
   if (!def) { out.appendChild(el('div', { className: 'error-box', textContent: 'Unknown type' })); return; }
 
   const box = el('div', { className: 'type-info' });
-  const cs = (b) => b ? 'case-sensitive' : 'case-insensitive';
+  const cs = (b) => b ? 'case-sensitive (spec)' : 'case-insensitive (spec)';
 
   // Header
   const title = el('h3', { style: 'font-size:14px;margin-bottom:4px' });
   title.appendChild(document.createTextNode(def.typeName + ' '));
   title.appendChild(el('span', { style: 'color:#8b949e;font-weight:400', textContent: `(${def.type})` }));
   box.appendChild(title);
-  box.appendChild(el('p', { style: 'color:#8b949e;font-size:13px;margin-bottom:12px', textContent: def.description }));
+  box.appendChild(el('p', { style: 'color:#8b949e;font-size:13px;margin-bottom:8px', textContent: def.description }));
+
+  // Note: clarify that case-sensitivity below is spec metadata, not library behavior
+  box.appendChild(el('div', {
+    style: 'font-size:11px;color:#8b949e;margin-bottom:12px;padding:6px 8px;background:#161b22;border-left:2px solid #58a6ff;border-radius:2px',
+    textContent: 'This library preserves the original case of all identifier components. Case-sensitivity below describes each ecosystem’s convention only.'
+  }));
 
   // Meta grid
   const meta = el('div', { className: 'type-meta' });

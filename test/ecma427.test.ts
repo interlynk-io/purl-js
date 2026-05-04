@@ -566,18 +566,18 @@ describe('constructor: build from components', () => {
 // 11. TYPE-SPECIFIC NORMALIZATION
 // ---------------------------------------------------------------------------
 describe('type normalization: pypi', () => {
-  it('lowercases name', () => {
-    expect(PackageURL.parse('pkg:pypi/Django@4.2').name).toBe('django');
+  it('preserves name case', () => {
+    expect(PackageURL.parse('pkg:pypi/Django@4.2').name).toBe('Django');
   });
 
   it('replaces underscores with dashes', () => {
     expect(PackageURL.parse('pkg:pypi/my_package@1.0').name).toBe('my-package');
   });
 
-  it('applies both: underscore + lowercase', () => {
+  it('replaces underscore with dash (separator normalization only)', () => {
     const p = PackageURL.parse('pkg:pypi/My_Package@1.0');
-    expect(p.name).toBe('my-package');
-    expect(p.toString()).toBe('pkg:pypi/my-package@1.0');
+    expect(p.name).toBe('My-Package');
+    expect(p.toString()).toBe('pkg:pypi/My-Package@1.0');
   });
 
   it('prohibits namespace', () => {
@@ -586,14 +586,14 @@ describe('type normalization: pypi', () => {
 });
 
 describe('type normalization: npm', () => {
-  it('lowercases name', () => {
-    expect(PackageURL.parse('pkg:npm/Express@4.0').name).toBe('express');
+  it('preserves name case', () => {
+    expect(PackageURL.parse('pkg:npm/Express@4.0').name).toBe('Express');
   });
 
-  it('lowercases namespace', () => {
+  it('preserves namespace case', () => {
     const p = PackageURL.parse('pkg:npm/%40Angular/Core@16.0');
-    expect(p.namespace).toBe('@angular');
-    expect(p.name).toBe('core');
+    expect(p.namespace).toBe('@Angular');
+    expect(p.name).toBe('Core');
   });
 
   it('roundtrips scoped package', () => {
@@ -614,10 +614,10 @@ describe('type normalization: maven', () => {
 });
 
 describe('type normalization: github', () => {
-  it('lowercases namespace and name', () => {
+  it('preserves namespace and name case', () => {
     const p = PackageURL.parse('pkg:github/Package-URL/Purl-Spec@1.0');
-    expect(p.namespace).toBe('package-url');
-    expect(p.name).toBe('purl-spec');
+    expect(p.namespace).toBe('Package-URL');
+    expect(p.name).toBe('Purl-Spec');
   });
 
   it('requires namespace', () => {
@@ -626,10 +626,10 @@ describe('type normalization: github', () => {
 });
 
 describe('type normalization: bitbucket', () => {
-  it('lowercases namespace and name', () => {
+  it('preserves namespace and name case', () => {
     const p = PackageURL.parse('pkg:bitbucket/MyOrg/MyRepo@1.0');
-    expect(p.namespace).toBe('myorg');
-    expect(p.name).toBe('myrepo');
+    expect(p.namespace).toBe('MyOrg');
+    expect(p.name).toBe('MyRepo');
   });
 });
 
@@ -647,9 +647,9 @@ describe('type normalization: docker', () => {
 });
 
 describe('type normalization: huggingface', () => {
-  it('lowercases version (commit hash)', () => {
+  it('preserves version case (commit hash)', () => {
     const p = PackageURL.parse('pkg:huggingface/google/bert-base-uncased@CD5EF3A3');
-    expect(p.version).toBe('cd5ef3a3');
+    expect(p.version).toBe('CD5EF3A3');
   });
 
   it('preserves name case', () => {
@@ -663,18 +663,18 @@ describe('type normalization: huggingface', () => {
 });
 
 describe('type normalization: golang', () => {
-  it('lowercases namespace and name', () => {
+  it('preserves namespace and name case', () => {
     const p = PackageURL.parse('pkg:golang/Google.Golang.Org/GenProto');
-    expect(p.namespace).toBe('google.golang.org');
-    expect(p.name).toBe('genproto');
+    expect(p.namespace).toBe('Google.Golang.Org');
+    expect(p.name).toBe('GenProto');
   });
 });
 
 describe('type normalization: composer', () => {
-  it('lowercases namespace and name', () => {
+  it('preserves namespace and name case', () => {
     const p = PackageURL.parse('pkg:composer/Laravel/Framework@10.0');
-    expect(p.namespace).toBe('laravel');
-    expect(p.name).toBe('framework');
+    expect(p.namespace).toBe('Laravel');
+    expect(p.name).toBe('Framework');
   });
 
   it('requires namespace', () => {
@@ -737,11 +737,11 @@ describe('type normalization: swid', () => {
 });
 
 describe('type normalization: vscode-extension', () => {
-  it('lowercases namespace, name, and version', () => {
+  it('preserves namespace, name, and version case', () => {
     const p = PackageURL.parse('pkg:vscode-extension/MS-Python/Python@2024.1.ABC');
-    expect(p.namespace).toBe('ms-python');
-    expect(p.name).toBe('python');
-    expect(p.version).toBe('2024.1.abc');
+    expect(p.namespace).toBe('MS-Python');
+    expect(p.name).toBe('Python');
+    expect(p.version).toBe('2024.1.ABC');
   });
 
   it('requires namespace', () => {
@@ -750,15 +750,15 @@ describe('type normalization: vscode-extension', () => {
 });
 
 describe('type normalization: mlflow', () => {
-  it('lowercases name when repository_url contains databricks', () => {
+  it('preserves name case regardless of repository_url', () => {
     const p = new PackageURL(
       'mlflow', null, 'CreditFraud', '3',
       { repository_url: 'https://adb-123.azuredatabricks.net/api/2.0/mlflow' }, null
     );
-    expect(p.name).toBe('creditfraud');
+    expect(p.name).toBe('CreditFraud');
   });
 
-  it('preserves name case for Azure ML (non-databricks)', () => {
+  it('preserves name case for Azure ML', () => {
     const p = new PackageURL(
       'mlflow', null, 'CreditFraud', '3',
       { repository_url: 'https://westus2.api.azureml.ms/mlflow/v1.0' }, null
@@ -881,10 +881,10 @@ describe('type registry', () => {
 // 14. API CONTRACTS — equals, matchesBase, withVersion, withQualifiers
 // ---------------------------------------------------------------------------
 describe('API: equals()', () => {
-  it('equal after normalization', () => {
+  it('not equal when case differs (no implicit normalization)', () => {
     const a = PackageURL.parse('pkg:pypi/Django@4.2');
     const b = PackageURL.parse('pkg:pypi/django@4.2');
-    expect(a.equals(b)).toBe(true);
+    expect(a.equals(b)).toBe(false);
   });
 
   it('not equal with different version', () => {
@@ -1215,5 +1215,59 @@ describe('edge cases', () => {
   it('golang purl with subpath and leading/trailing slashes', () => {
     const p = PackageURL.parse('pkg:golang/google.golang.org/genproto#/googleapis/api/annotations/');
     expect(p.subpath).toBe('googleapis/api/annotations');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 18. CASE PRESERVATION — regression anchor against silent lowercasing
+// ---------------------------------------------------------------------------
+// The library does not silently lowercase identifier data. Mixed-case input
+// must survive parse/toString roundtrips for every type, including those the
+// PURL spec marks case-insensitive. Type identifier and qualifier keys are
+// still lowercased (separate spec rules unrelated to identifier data).
+describe('case preservation', () => {
+  const mixedCaseRoundtrips: Array<[string, string]> = [
+    ['npm name', 'pkg:npm/MyPackage@1.0.0'],
+    ['npm scoped namespace', 'pkg:npm/%40MyScope/MyName@1.0'],
+    ['github namespace and name', 'pkg:github/Package-URL/Purl-Spec@v1.0'],
+    ['bitbucket namespace and name', 'pkg:bitbucket/MyOrg/MyRepo@1.0'],
+    ['golang multi-segment namespace', 'pkg:golang/Google.Golang.Org/GenProto'],
+    ['composer namespace and name', 'pkg:composer/Laravel/Framework@10.0'],
+    ['alpm namespace and name', 'pkg:alpm/Arch/Pacman@6.0'],
+    ['apk namespace and name', 'pkg:apk/Alpine/Curl@7.0'],
+    ['bitnami name', 'pkg:bitnami/Wordpress@6.0'],
+    ['oci name', 'pkg:oci/MyImage@sha256:abc'],
+    ['otp name', 'pkg:otp/MyApp@1.0'],
+    ['vscode-extension all components', 'pkg:vscode-extension/MS-Python/Python@2024.1.ABC'],
+    ['huggingface uppercase commit hash', 'pkg:huggingface/EleutherAI/gpt-neo-1.3B@AABBCC'],
+    ['mlflow with databricks repo', 'pkg:mlflow/CreditFraud@3?repository_url=https:%2F%2Fadb.azuredatabricks.net'],
+  ];
+
+  for (const [label, input] of mixedCaseRoundtrips) {
+    it(`preserves case for ${label}`, () => {
+      const p = PackageURL.parse(input);
+      expect(p.toString()).toBe(input);
+    });
+  }
+
+  it('preserves case via constructor for case-insensitive types', () => {
+    const p = new PackageURL('npm', '@MyScope', 'MyPackage', '1.0.0', null, null);
+    expect(p.namespace).toBe('@MyScope');
+    expect(p.name).toBe('MyPackage');
+    expect(p.version).toBe('1.0.0');
+  });
+
+  it('still applies pypi underscore-to-dash normalization without lowercasing', () => {
+    const p = PackageURL.parse('pkg:pypi/My_Package@1.0');
+    expect(p.name).toBe('My-Package');
+  });
+
+  it('still lowercases the type identifier (separate spec rule)', () => {
+    expect(PackageURL.parse('pkg:NPM/MyPackage').type).toBe('npm');
+  });
+
+  it('still lowercases qualifier keys (separate spec rule)', () => {
+    const p = PackageURL.parse('pkg:npm/foo?Arch=x86&OS=linux');
+    expect(p.qualifiers).toEqual({ arch: 'x86', os: 'linux' });
   });
 });

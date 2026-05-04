@@ -2,23 +2,23 @@
   "$schema": "https://packageurl.org/schemas/purl-test.schema-0.1.json",
   "tests": [
     {
-      "description": "MLflow model tracked in Azure Databricks (case insensitive). Roundtrip an input purl to canonical.",
+      "description": "MLflow model tracked in Azure Databricks (case preserved). Roundtrip an input purl to canonical.",
       "test_group": "advanced",
       "test_type": "roundtrip",
       "input": "pkg:mlflow/CreditFraud@3?repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
-      "expected_output": "pkg:mlflow/creditfraud@3?repository_url=https:%2F%2Fadb-5245952564735461.0.azuredatabricks.net%2Fapi%2F2.0%2Fmlflow",
+      "expected_output": "pkg:mlflow/CreditFraud@3?repository_url=https:%2F%2Fadb-5245952564735461.0.azuredatabricks.net%2Fapi%2F2.0%2Fmlflow",
       "expected_failure": false,
       "expected_failure_reason": null
     },
     {
-      "description": "MLflow model tracked in Azure Databricks (case insensitive)",
+      "description": "MLflow model tracked in Azure Databricks (case preserved)",
       "test_group": "base",
       "test_type": "parse",
       "input": "pkg:mlflow/CreditFraud@3?repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
       "expected_output": {
         "type": "mlflow",
         "namespace": null,
-        "name": "creditfraud",
+        "name": "CreditFraud",
         "version": "3",
         "qualifiers": {
           "repository_url": "https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"
@@ -29,7 +29,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "MLflow model tracked in Azure Databricks (case insensitive). Roundtrip a canonical input to canonical output.",
+      "description": "MLflow Databricks lowercase canonical input roundtrips unchanged",
       "test_group": "base",
       "test_type": "roundtrip",
       "input": "pkg:mlflow/creditfraud@3?repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
@@ -38,7 +38,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "MLflow model tracked in Azure Databricks (case insensitive)",
+      "description": "MLflow Databricks build from lowercase components",
       "test_group": "base",
       "test_type": "build",
       "input": {

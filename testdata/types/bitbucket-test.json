@@ -2,23 +2,23 @@
   "$schema": "https://packageurl.org/schemas/purl-test.schema-0.1.json",
   "tests": [
     {
-      "description": "bitbucket namespace and name should be lowercased. Roundtrip an input purl to canonical.",
+      "description": "bitbucket namespace and name preserve case. Roundtrip an input purl to canonical.",
       "test_group": "advanced",
       "test_type": "roundtrip",
       "input": "pkg:bitbucket/birKenfeld/pyGments-main@244fd47e07d1014f0aed9c",
-      "expected_output": "pkg:bitbucket/birkenfeld/pygments-main@244fd47e07d1014f0aed9c",
+      "expected_output": "pkg:bitbucket/birKenfeld/pyGments-main@244fd47e07d1014f0aed9c",
       "expected_failure": false,
       "expected_failure_reason": null
     },
     {
-      "description": "bitbucket namespace and name should be lowercased",
+      "description": "bitbucket namespace and name preserve case",
       "test_group": "base",
       "test_type": "parse",
       "input": "pkg:bitbucket/birKenfeld/pyGments-main@244fd47e07d1014f0aed9c",
       "expected_output": {
         "type": "bitbucket",
-        "namespace": "birkenfeld",
-        "name": "pygments-main",
+        "namespace": "birKenfeld",
+        "name": "pyGments-main",
         "version": "244fd47e07d1014f0aed9c",
         "qualifiers": null,
         "subpath": null
@@ -27,7 +27,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "bitbucket namespace and name should be lowercased. Roundtrip a canonical input to canonical output.",
+      "description": "bitbucket lowercase canonical input roundtrips unchanged",
       "test_group": "base",
       "test_type": "roundtrip",
       "input": "pkg:bitbucket/birkenfeld/pygments-main@244fd47e07d1014f0aed9c",
@@ -36,7 +36,7 @@
       "expected_failure_reason": null
     },
     {
-      "description": "bitbucket namespace and name should be lowercased",
+      "description": "bitbucket build from lowercase components",
       "test_group": "base",
       "test_type": "build",
       "input": {

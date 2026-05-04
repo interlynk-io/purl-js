@@ -110,7 +110,7 @@
       "test_group": "advanced",
       "test_type": "roundtrip",
       "input": "pkg:huggingface/EleutherAI/gpt-neo-1.3B@797174552AE47F449AB70B684CABCB6603E5E85E",
-      "expected_output": "pkg:huggingface/EleutherAI/gpt-neo-1.3B@797174552ae47f449ab70b684cabcb6603e5e85e",
+      "expected_output": "pkg:huggingface/EleutherAI/gpt-neo-1.3B@797174552AE47F449AB70B684CABCB6603E5E85E",
       "expected_failure": false,
       "expected_failure_reason": null
     },
@@ -123,7 +123,7 @@
         "type": "huggingface",
         "namespace": "EleutherAI",
         "name": "gpt-neo-1.3B",
-        "version": "797174552ae47f449ab70b684cabcb6603e5e85e",
+        "version": "797174552AE47F449AB70B684CABCB6603E5E85E",
         "qualifiers": null,
         "subpath": null
       },
